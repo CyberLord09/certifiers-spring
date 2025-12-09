@@ -114,8 +114,9 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.DELETE, "/api/calendar/delete/{id}")
                                                 .permitAll()
 
-                                                .requestMatchers(HttpMethod.GET, "/api/train/**").authenticated()
                                                 .requestMatchers("/api/grades/**").authenticated()
+
+                                                .requestMatchers(HttpMethod.GET, "/api/train/**").authenticated()
 
                                 )
                                 .cors(Customizer.withDefaults())
