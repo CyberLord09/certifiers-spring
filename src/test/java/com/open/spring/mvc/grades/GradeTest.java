@@ -14,9 +14,23 @@ public class GradeTest {
         grade.setUid(uid);
         assertEquals(uid, grade.getUid(), "getUid should return set uid");
 
-        // Test course field
-        String course = "CSA";
-        grade.setCourse(course);
-        assertEquals(course, grade.getCourse(), "getCourse should return set course");
+        // Test className field (renamed from course)
+        String className = "CSA";
+        grade.setClassName(className);
+        assertEquals(className, grade.getClassName(), "getClassName should return set className");
+
+        // Test title field (renamed from assignment)
+        String title = "Lab 1";
+        grade.setTitle(title);
+        assertEquals(title, grade.getTitle(), "getTitle should return set title");
+
+        // Test new fields
+        String notes = "Good work";
+        grade.setNotes(notes);
+        assertEquals(notes, grade.getNotes(), "getNotes should return set notes");
+
+        String link = "http://example.com";
+        grade.setLink(link);
+        assertEquals(link, grade.getLink(), "getLink should return set link");
     }
 }

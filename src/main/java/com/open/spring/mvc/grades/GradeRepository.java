@@ -8,5 +8,10 @@ import java.util.List;
 public interface GradeRepository extends JpaRepository<Grade, Long> {
     List<Grade> findByUid(String uid);
 
-    List<Grade> findByAssignment(String assignment);
+    List<Grade> findByTitle(String title);
+
+    java.util.Optional<Grade> findByUidAndTitle(String uid, String title);
+
+    @org.springframework.transaction.annotation.Transactional
+    void deleteByUidAndTitle(String uid, String title);
 }

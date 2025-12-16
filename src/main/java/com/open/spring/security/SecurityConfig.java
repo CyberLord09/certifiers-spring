@@ -114,11 +114,11 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.DELETE, "/api/calendar/delete/{id}")
                                                 .permitAll()
 
-                                                .requestMatchers("/api/grades/**").authenticated()
+                                                .requestMatchers("/api/grades/**").permitAll()
 
                                                 .requestMatchers(HttpMethod.GET, "/api/train/**").authenticated()
 
-                                )
+                                )          
                                 .cors(Customizer.withDefaults())
                                 .headers(headers -> headers
                                                 .addHeaderWriter(new StaticHeadersWriter(
