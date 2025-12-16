@@ -1,17 +1,11 @@
 package com.open.spring.mvc.grades;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 @RestController
@@ -21,8 +15,8 @@ public class GradeController {
     @Autowired
     private GradeRepository gradeRepository;
 
-    @Value("${file.upload-dir:volumes/uploads}")
-    private String backendUploadDir;
+    @Autowired
+    private FileHandler fileHandler;
 
     @PostMapping
     public ResponseEntity<?> createAssignment(@RequestBody Map<String, Object> data) {
@@ -50,7 +44,7 @@ public class GradeController {
                     String filename = upload.get("filename");
 
                     if (b64File != null && filename != null) {
-                        String savedFilename = assignmentBase64Upload(b64File, filename, uid, title);
+                        String savedFilename = fileHandler.uploadFile(b64File, filename, uid, title);
                         if (savedFilename != null) {
                             uploadedFiles.add(savedFilename);
                         } else {
@@ -133,13 +127,13 @@ public class GradeController {
             List<Map<String, String>> enhancedContent = new ArrayList<>();
 
             for (String filename : content) {
-                String base64Str = assignmentBase64Decode(grade.getUid(), grade.getTitle(), filename);
+                String base64Str = fileHandler.decodeFile(grade.getUid(), grade.getTitle(), filename);
                 Map<String, String> fileMap = new HashMap<>();
                 fileMap.put("filename", filename);
                 if (base64Str != null) {
                     fileMap.put("file", base64Str);
                 } else {
-                    fileMap.put("error", "File not found or unreadable");
+                    fileMap.put("error", "File not found/unreadable or AWS S3 error");
                 }
                 enhancedContent.add(fileMap);
             }
@@ -163,7 +157,7 @@ public class GradeController {
         }
 
         // Delete files
-        boolean filesDeleted = assignmentDeleteFiles(uid, title);
+        boolean filesDeleted = fileHandler.deleteFiles(uid, title);
 
         // Delete record
         gradeRepository.delete(optionalGrade.get());
@@ -172,58 +166,6 @@ public class GradeController {
     }
 
     // Helper Methods
-
-    private String assignmentBase64Upload(String base64Data, String filename, String uid, String assignmentTitle) {
-        try {
-            byte[] fileData = Base64.getDecoder().decode(base64Data);
-
-            // Clean filename (simple version)
-            String cleanFilename = Paths.get(filename).getFileName().toString();
-
-            Path targetDir = Paths.get(backendUploadDir, uid, assignmentTitle);
-            if (!Files.exists(targetDir)) {
-                Files.createDirectories(targetDir);
-            }
-
-            Path filePath = targetDir.resolve(cleanFilename);
-            Files.write(filePath, fileData);
-
-            return cleanFilename;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    private String assignmentBase64Decode(String uid, String assignmentTitle, String filename) {
-        Path filePath = Paths.get(backendUploadDir, uid, assignmentTitle, filename);
-        try {
-            if (Files.exists(filePath)) {
-                byte[] fileBytes = Files.readAllBytes(filePath);
-                return Base64.getEncoder().encodeToString(fileBytes);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    private boolean assignmentDeleteFiles(String uid, String assignmentTitle) {
-        Path targetDir = Paths.get(backendUploadDir, uid, assignmentTitle);
-        try {
-            if (Files.exists(targetDir)) {
-                // Recursive delete
-                Files.walk(targetDir)
-                        .sorted(Comparator.reverseOrder())
-                        .map(Path::toFile)
-                        .forEach(File::delete);
-            }
-            return true;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
 
     private Map<String, Object> convertGradeToMap(Grade grade) {
         Map<String, Object> map = new HashMap<>();
