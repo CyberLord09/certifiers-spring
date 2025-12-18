@@ -40,15 +40,17 @@ public class Groups extends Submitter {
     @JsonIgnore
     private List<Person> groupMembers = new ArrayList<>();
 
-    private String name; // New column for group name
-    private String period; // New column for group period
+    private String name;
+    private String period;
+    private String course;
 
     public Groups() {
     }
 
-    public Groups(String name, String period, List<Person> groupMembers) {
+    public Groups(String name, String period, String course, List<Person> groupMembers) {
         this.name = name;
         this.period = period;
+        this.course = course;
         this.groupMembers = groupMembers;
     }
 

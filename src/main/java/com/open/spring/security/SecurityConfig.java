@@ -76,45 +76,51 @@ public class SecurityConfig {
                                 // OVERWRITTEN BY BELOW
                                 .authorizeHttpRequests(auth -> auth
 
-                                                // API
-                                                // ------------------------------------------------------------------------------
-                                                .requestMatchers(HttpMethod.POST, "/authenticate").permitAll()
-                                                .requestMatchers(HttpMethod.GET, "/api/analytics/**").permitAll()
-                                                .requestMatchers(HttpMethod.POST, "/api/person/**").permitAll()
-                                                .requestMatchers(HttpMethod.GET, "/api/person/{id}/balance").permitAll() // Allow
-                                                                                                                         // unauthenticated
-                                                                                                                         // access
-                                                                                                                         // to
-                                                                                                                         // this
-                                                                                                                         // endpoint
-                                                .requestMatchers(HttpMethod.GET, "/api/person/**").permitAll()
-                                                .requestMatchers(HttpMethod.GET, "/api/people/**").authenticated()
-                                                .requestMatchers(HttpMethod.POST, "/api/assets/upload").authenticated()
-                                                .requestMatchers(HttpMethod.GET, "/api/assets/upload/{id}")
-                                                .authenticated()
-                                                .requestMatchers(HttpMethod.GET, "/api/assets/uploads").authenticated()
-                                                .requestMatchers(HttpMethod.PUT, "/api/person/**").authenticated()
-                                                .requestMatchers(HttpMethod.DELETE, "/api/person/**")
-                                                .hasAuthority("ROLE_ADMIN")
+                        // ========== AUTHENTICATION & USER MANAGEMENT ==========
+                        // Public endpoints - no authentication required, support user login and account creation
+                        .requestMatchers(HttpMethod.POST, "/authenticate").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/person/create").permitAll()
+                        // Admin-only endpoints, beware of DELETE operations and impact to cascading relational data 
+                        .requestMatchers(HttpMethod.DELETE, "/api/person/**").hasAuthority("ROLE_ADMIN")
+                        // All other /api/person/** and /api/people/** operations handled by default rule
+                        // ======================================================
 
-                                                .requestMatchers(HttpMethod.GET, "/api/plant/**").permitAll()
-                                                .requestMatchers(HttpMethod.POST, "/api/plant/**").permitAll()
-                                                .requestMatchers(HttpMethod.PUT, "/api/plant/**").permitAll()
+                        // ========== PUBLIC API ENDPOINTS ==========
+                        // Intentionally public - used for polling and public features
+                        .requestMatchers("/api/jokes/**").permitAll()
+                        // ==========================================
+                        .requestMatchers("/api/exports/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/imports/**").hasAuthority("ROLE_ADMIN")
+                        // ========== SYNERGY (ROLE-BASED ACCESS, Legacy system) ==========
+                        // Specific endpoint with student/teacher/admin access
+                        .requestMatchers(HttpMethod.POST, "/api/synergy/grades/requests").hasAnyAuthority("ROLE_STUDENT", "ROLE_TEACHER", "ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/synergy/saigai/").hasAnyAuthority("ROLE_STUDENT", "ROLE_TEACHER", "ROLE_ADMIN")
+                        // Teacher and admin access for other POST operations
+                        .requestMatchers(HttpMethod.POST, "/api/synergy/**").hasAnyAuthority("ROLE_TEACHER", "ROLE_ADMIN")
+                        // Admin access for certificates + quests
+                        .requestMatchers(HttpMethod.POST, "/api/quests/**").hasAnyAuthority("ROLE_TEACHER", "ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/quests/**").hasAnyAuthority("ROLE_TEACHER", "ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/quests/**").hasAnyAuthority("ROLE_TEACHER", "ROLE_ADMIN")
+                        
 
-                                                .requestMatchers(HttpMethod.POST, "/api/synergy/grades/requests")
-                                                .hasAnyAuthority("ROLE_STUDENT", "ROLE_TEACHER", "ROLE_ADMIN")
-                                                .requestMatchers(HttpMethod.POST, "/api/synergy/**")
-                                                .hasAnyAuthority("ROLE_TEACHER", "ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/certificates/**").hasAnyAuthority("ROLE_TEACHER", "ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/certificates/**").hasAnyAuthority("ROLE_TEACHER", "ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/certificates/**").hasAnyAuthority("ROLE_TEACHER", "ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/user-certificates/**").hasAnyAuthority("ROLE_TEACHER", "ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/user-certificates/**").hasAnyAuthority("ROLE_TEACHER", "ROLE_ADMIN")
+                        // =================================================
 
-                                                .requestMatchers(HttpMethod.DELETE, "/api/synergy/saigai/")
-                                                .hasAnyAuthority("ROLE_STUDENT", "ROLE_TEACHER", "ROLE_ADMIN")
-                                                .requestMatchers(HttpMethod.POST, "/api/calendar/add").permitAll()
-                                                .requestMatchers(HttpMethod.POST, "/api/calendar/add_event").permitAll()
-                                                .requestMatchers(HttpMethod.PUT, "/api/calendar/edit/{id}").permitAll()
-                                                .requestMatchers(HttpMethod.DELETE, "/api/calendar/delete/{id}")
-                                                .permitAll()
-
-                                                .requestMatchers("/api/grades/**").permitAll()
+                        // ========== PUBLIC API ENDPOINTS (Legacy - TODO: Review for security) ==========
+                        // These endpoints are currently wide open - consider if they should require authentication
+                        .requestMatchers("/api/analytics/**").permitAll()
+                        .requestMatchers("/api/plant/**").permitAll()
+                        .requestMatchers("/api/groups/**").permitAll()
+                        .requestMatchers("/api/grade-prediction/**").permitAll()
+                        .requestMatchers("/api/admin-evaluation/**").permitAll()
+                        .requestMatchers("/api/grades/**").permitAll()
+                        .requestMatchers("/api/progress/**").permitAll()
+                        .requestMatchers("/api/calendar/**").permitAll()
+                        // ================================================================================
 
                                                 .requestMatchers(HttpMethod.GET, "/api/train/**").authenticated()
 
